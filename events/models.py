@@ -31,7 +31,7 @@ class CategoryEvents(models.Model):
 
 class CommentsEvents(models.Model):
     user = models.ForeignKey('user.User', on_delete=models.CASCADE)
-    events = models.ForeignKey(Events,on_delete=models.CASCADE)
+    events =     models.ForeignKey(Events,on_delete=models.CASCADE)
     title = models.CharField(max_length=155)
     created_at = models.DateTimeField(auto_now_add=True)
 
