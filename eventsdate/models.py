@@ -8,10 +8,9 @@ class Meeting(models.Model):
     description = models.TextField()
     geolocation_name = models.CharField(max_length=255)
     date_time = models.DateTimeField()
+    photo = models.ImageField(upload_to='meeting', blank=True, null=True)
     organizer = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='organized_events')
-    members = models.ManyToManyField(
-        User, through='MeetingMembers')
     max_members = models.PositiveIntegerField()
     views = models.IntegerField(default=0)
     price = models.IntegerField()

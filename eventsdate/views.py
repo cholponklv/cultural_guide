@@ -13,9 +13,9 @@ class MeetingViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.MeetingSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (dj_filters.DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter)
-    filterset_class = filter.MeetingFilters
+    filterset_class = filter.MeetingFilters 
     ordering_fields = '__all__'
-    search_fields = ('title','description', 'geolocation_name','date','time_start',"time_end")
+    search_fields = ('title','description', 'geolocation_name','date_time')
 
     def perform_create(self, serializer):
         serializer.save(organizer=self.request.user)
