@@ -30,8 +30,8 @@ class CategoryEvents(models.Model):
 
 
 class CommentsEvents(models.Model):
-    user = models.ForeignKey('user.User', on_delete=models.CASCADE)
-    events =     models.ForeignKey(Events,on_delete=models.CASCADE)
+    user = models.ForeignKey('user.User', on_delete=models.CASCADE,default=None)
+    events = models.ForeignKey(Events,on_delete=models.CASCADE)
     title = models.CharField(max_length=155)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -41,7 +41,7 @@ class CommentsEvents(models.Model):
 
 class LikesEvents(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
-    events = models.ForeignKey(Events,on_delete=models.CASCADE)
+    events = models.ForeignKey(Events,on_delete=models.CASCADE,blank=True,null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -50,7 +50,7 @@ class LikesEvents(models.Model):
 
 class LikesComments(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
-    comments = models.ForeignKey(CommentsEvents,on_delete=models.CASCADE)
+    comments = models.ForeignKey(CommentsEvents,on_delete=models.CASCADE,blank=True,null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
