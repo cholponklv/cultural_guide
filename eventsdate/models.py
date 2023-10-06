@@ -13,6 +13,7 @@ class Meeting(models.Model):
     members = models.ManyToManyField(
         User, through='MeetingMembers')
     max_members = models.PositiveIntegerField()
+    views = models.IntegerField(default=0)
     price = models.IntegerField()
 
     def __str__(self):
