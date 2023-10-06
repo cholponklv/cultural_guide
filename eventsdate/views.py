@@ -14,7 +14,7 @@ from rest_framework import status
 class MeetingViewSet(viewsets.ModelViewSet):
     queryset = models.Meeting.objects.all()
     serializer_class = serializers.MeetingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = (dj_filters.DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter)
     filterset_class = filter.MeetingFilters 
     ordering_fields = '__all__'
@@ -43,10 +43,17 @@ class JoinMeetingAPIView(APIView):
         if current_members_count >= meeting.max_members:
             return Response({'error': 'Переполнено'}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = request.user  
-        meeting_member = models.MeetingMembers(user=user, meeting=meeting)
-        meeting_member.save()
+        user = request.user
+        existing_membership = models.MeetingMembers.objects.filter(user=user, meeting=meeting).first()
+
+        if existing_membership:
+            existing_membership.delete()
+            message = 'Присоединение отменено'
+        else:
+            meeting_member = models.MeetingMembers(user=user, meeting=meeting)
+            meeting_member.save()
+            message = 'Успешно присоединено'
 
       
         serializer = serializers.MeetingSerializer(meeting)  
-        return Response({'message': 'Успешно присоединено', 'meeting': serializer.data})
+        return Response({'message':message, 'meeting': serializer.data})

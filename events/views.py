@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 class EventsViewSet(viewsets.ModelViewSet):
     queryset = models.Events.objects.all()
     serializer_class = serializers.EventsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = (dj_filters.DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter)
     filterset_class = filter.EventsFilters
     ordering_fields = '__all__'
@@ -30,12 +30,12 @@ class EventsViewSet(viewsets.ModelViewSet):
 class CategoryEventsViewSet(viewsets.ModelViewSet):
     queryset = models.CategoryEvents.objects.all()
     serializer_class = serializers.CategoryEventsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 class CommentsEventsViewSet(viewsets.ModelViewSet):
     queryset = models.CommentsEvents.objects.all()
     serializer_class = serializers.CommentsEventsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
