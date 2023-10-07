@@ -51,7 +51,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    role = models.CharField(max_length=100, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=100, choices=ROLE_CHOICES,default='user')
     photo = models.ImageField(upload_to='profile', default='profile/ava.png')
     phone_number = PhoneNumberField(unique=True)
     is_active = models.BooleanField(default=True)
@@ -62,6 +62,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email_confirmation_code = models.CharField(
         max_length=6, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
+    doc = models.CharField(max_length=100,blank=True,null=True)
     chat_id = models.CharField(max_length=100, blank=True, null=True)
     token = models.CharField(max_length=16, null=True, blank=True)
     objects = MyCustomUserManger()

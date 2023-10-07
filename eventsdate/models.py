@@ -22,6 +22,7 @@ class Meeting(models.Model):
 class MeetingMembers(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE)
+    text = models.TextField()
 
     def __str__(self):
         return f'{self.user.username} на {self.meeting.title}'
