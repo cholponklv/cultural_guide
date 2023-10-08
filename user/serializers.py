@@ -1,5 +1,8 @@
 from user.models import User,Favourites
 from rest_framework import serializers
+from tours.serializers import ToursSerializer
+from events.serializers import EventsSerializer
+from eventsdate.serializers import MeetingSerializer
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -61,6 +64,10 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class FavouritesSerializer(serializers.ModelSerializer):
+    events = EventsSerializer()  # Включаем сериализатор Events для поля events
+    tours = ToursSerializer()    # Включаем сериализатор Tours для поля tours
+    meetings = MeetingSerializer()  # Включаем сериализатор Meeting для поля meetings
+
     class Meta:
         model = Favourites
         fields = '__all__' 
