@@ -1,4 +1,4 @@
-from user.models import User
+from user.models import User,Favourites
 from rest_framework import serializers
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -58,3 +58,9 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username','name','password', 'last_name', 'email', 'photo', 'phone_number','gender','date_of_birth','doc')
+
+
+class FavouritesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favourites
+        fields = '__all__' 

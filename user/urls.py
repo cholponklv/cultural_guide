@@ -13,4 +13,6 @@ urlpatterns = [
     path('signup/', views.UserRegistrationView.as_view(),name ='signup'),
     path('signup/company/', views.CompanyRegistrationView.as_view(),name ='signup_company'),
     path('profile/',views.UserProfileView.as_view(),name = 'profile'),
+    path('add_to_favourites/', views.FavouritesCreateView.as_view(), name='add_to_favourites'),
+    path('favourites/', views.FavouritesListAPIView.as_view(), name='favourites-list'),
 ]
