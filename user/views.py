@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from .models import User
-from rest_framework import generics, permissions,status
+from rest_framework import generics, permissions,status,viewsets
 from rest_framework_simplejwt.tokens import RefreshToken
 from user import serializers
 from rest_framework.response import Response
@@ -60,3 +60,7 @@ class CompanyRegistrationView(generics.CreateAPIView):
     def perform_create(self, serializer):
         return serializer.save()
     
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = serializers.UserSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]

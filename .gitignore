@@ -2,7 +2,7 @@
 venv/
 
 # Игнорировать миграции Django
-
+**/migrations/
 
 # Игнорировать файлы логов Django
 *.log
