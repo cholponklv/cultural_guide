@@ -4,25 +4,30 @@ from tours import models
 class ToursSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Tours
-        fields = ('id','title','category','photo','description','price','date','duration','time_start','time_end','date_end','views','priority','geolocation_name','organizer')
+        fields = ('id','title','category','photo','description','price','date','duration','time_start','time_end','max_members','views','geolocation_name','organizer')
 
-class CategoryEventsSerializer(serializers.ModelSerializer):
+class CategoryToursSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.CategoryEvents
+        model = models.CategoryTours
         fields = ('id','title',)
 
-class CommentsEventsSerializer(serializers.ModelSerializer):
+class ReviewsToursSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.CommentsEvents
-        fields = ('id','title','events','user','created_at')
+        model = models.ReviewsTours
+        fields = ('id','title','tours','user','created_at')
 
-class LikesEventsSerializer(serializers.ModelSerializer):
+class LikesToursSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.LikesEvents
-        fields = ('id','events','user','created_at')
+        model = models.LikesTours
+        fields = ('id','tours','user','created_at')
 
 
-class LikesCommentsSerializer(serializers.ModelSerializer):
+class LikesReviewsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.LikesComments
-        fields = ('id','comments','user','created_at')
+        model = models.LikesReviews
+        fields = ('id','reviews','user','created_at')
+
+class ToursMembersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ToursMembers
+        fields = ('text',)

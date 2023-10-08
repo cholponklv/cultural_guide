@@ -20,6 +20,7 @@ class Events(models.Model):
     priority = models.CharField(max_length=4, choices=PRIORITY_CHOICES)
     geolocation_name = models.CharField(max_length=155)
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
+    likes_count = models.IntegerField(default=0)
 
 
 class CategoryEvents(models.Model):
@@ -34,6 +35,7 @@ class CommentsEvents(models.Model):
     events = models.ForeignKey(Events,on_delete=models.CASCADE)
     title = models.CharField(max_length=155)
     created_at = models.DateTimeField(auto_now_add=True)
+    likes_count = models.IntegerField(default=0)
 
     def __str__(self):
         return str(self.title)

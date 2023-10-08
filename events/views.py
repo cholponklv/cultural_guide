@@ -6,6 +6,7 @@ from events import models
 from events import serializers
 from events import filter
 from rest_framework import generics
+from rest_framework import status
 from django.shortcuts import get_object_or_404
 # Create your views here.
 class EventsViewSet(viewsets.ModelViewSet):
@@ -54,8 +55,14 @@ class LikeEventsListCreateView(generics.ListCreateAPIView):
         
         if existing_like:
             existing_like.delete()
+            events.likes_count -= 1
+            events.save()
         else:
             serializer.save(user=user, events=events)
+            events.likes_count += 1
+            events.save()
+        return Response({'message': 'Лайк обновлен'}, status=status.HTTP_200_OK)
+
 
 class LikeCommentsListCreateView(generics.ListCreateAPIView):
     queryset = models.LikesComments.objects.all()
@@ -71,5 +78,10 @@ class LikeCommentsListCreateView(generics.ListCreateAPIView):
         
         if existing_like:
             existing_like.delete()
+            comments.likes_count -= 1
+            comments.save()
         else:
             serializer.save(user=user, comments=comments)
+            comments.likes_count += 1
+            comments.save()
+        return Response({'message': 'Лайк обновлен'}, status=status.HTTP_200_OK)
