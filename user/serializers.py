@@ -65,8 +65,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class FavouritesSerializer(serializers.ModelSerializer):
     events = EventsSerializer()  
-    tours = ToursSerializer()   
-    meetings = MeetingSerializer()  
+    
 
     class Meta:
         model = Favourites

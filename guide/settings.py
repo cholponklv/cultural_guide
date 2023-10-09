@@ -55,7 +55,8 @@ LOCAL_APPS=[
     'events',
     'eventsdate',
     'tours',
-    'user'
+    'user',
+    'tglocation'
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [

@@ -89,9 +89,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Favourites(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,default=None)
     events = models.ForeignKey('events.Events', on_delete=models.CASCADE,blank=True,null=True,default=None)
-    tours = models.ForeignKey("tours.Tours",on_delete=models.CASCADE,blank=True,null=True,default=None)
-    meetings = models.ForeignKey('eventsdate.Meeting',on_delete=models.CASCADE,blank=True,null=True,default=None)
-    type = models.CharField(max_length=100, choices=[('event', 'Event'), ('tour', 'Tour'), ('meeting', 'Meeting')],default=None)
     class Meta:
         unique_together = ('user', 'events')
         
