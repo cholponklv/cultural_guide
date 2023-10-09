@@ -64,9 +64,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class FavouritesSerializer(serializers.ModelSerializer):
-    events = EventsSerializer()  # Включаем сериализатор Events для поля events
-    tours = ToursSerializer()    # Включаем сериализатор Tours для поля tours
-    meetings = MeetingSerializer()  # Включаем сериализатор Meeting для поля meetings
+    events = EventsSerializer()  
+    tours = ToursSerializer()   
+    meetings = MeetingSerializer()  
 
     class Meta:
         model = Favourites

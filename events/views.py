@@ -33,13 +33,28 @@ class CategoryEventsViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.CategoryEventsSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-class CommentsEventsViewSet(viewsets.ModelViewSet):
+
+class CommentsEventsListCreateView(generics.ListCreateAPIView):
     queryset = models.CommentsEvents.objects.all()
     serializer_class = serializers.CommentsEventsSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        event_id = self.kwargs['event_id']
+        
+        event = get_object_or_404(models.Events, pk=event_id)
+        print(event)
+        serializer.save(user=self.request.user, events=event)
+
+    def get_queryset(self):
+        event_id = self.kwargs['event_id']
+        event = get_object_or_404(models.Events, pk=event_id)
+        
+    
+        queryset = models.CommentsEvents.objects.filter(events=event)
+        
+        return queryset
+    
 
 class LikeEventsListCreateView(generics.ListCreateAPIView):
     queryset = models.LikesEvents.objects.all()
