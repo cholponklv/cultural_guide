@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 # Create your views here.
 class EventsViewSet(viewsets.ModelViewSet):
     queryset = models.Events.objects.all()
-    serializer_class = serializers.EventsSerializer
+    serializer_class = serializers.EventsCreateSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = (dj_filters.DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter)
     filterset_class = filter.EventsFilters

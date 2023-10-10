@@ -6,6 +6,10 @@ class EventsSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Events
         fields = ('id','title','category','category_titles','photo','description','price','date','time_start','time_end','views','priority','geolocation_name','organizer')
+class EventsCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Events
+        fields = ('id','title','category','photo','description','price','date','time_start','time_end','views','priority','geolocation_name','organizer')
 
 class CategoryEventsSerializer(serializers.ModelSerializer):
     class Meta:
