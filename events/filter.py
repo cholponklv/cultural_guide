@@ -4,4 +4,4 @@ from events import models
 class EventsFilters(filterset.FilterSet):
     class Meta:
         model = models.Events
-        fields = ('id','title','category','description','price','date','time_start','time_end','views','priority','geolocation_name','organizer')
+        fields = ('id','title','category__title','description','price','date','time_start','time_end','views','priority','geolocation_name','organizer')

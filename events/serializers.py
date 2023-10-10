@@ -2,9 +2,10 @@ from rest_framework import serializers
 from events import models
 
 class EventsSerializer(serializers.ModelSerializer):
+    category_titles = serializers.StringRelatedField(source='category.all', many=True)
     class Meta:
         model = models.Events
-        fields = ('id','title','category','photo','description','price','date','time_start','time_end','views','priority','geolocation_name','organizer')
+        fields = ('id','title','category','category_titles','photo','description','price','date','time_start','time_end','views','priority','geolocation_name','organizer')
 
 class CategoryEventsSerializer(serializers.ModelSerializer):
     class Meta:

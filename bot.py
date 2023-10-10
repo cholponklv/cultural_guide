@@ -1,124 +1,196 @@
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackContext, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler
+from telegram import ReplyKeyboardMarkup, KeyboardButton, Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackContext
+from django.db import transaction
 import os
 import sys
 sys.path.append('/home/cholponklv/Desktop/xacaton/guide/')
 
 # Импортируйте настройки Django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "guide.settings")  # Замените на ваше имя проекта
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "guide.settings")  # Замените на имя вашего проекта Django
 
 import django
 django.setup()
-from tglocation.models import Locations ,TgUser
+from tglocation.models import Locations, TgUser
 
-# Настройка логирования
+# Импортируйте библиотеку geopy для расчета расстояния
+from geopy.distance import geodesic
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
-# Определение состояний для конечного автомата
-ADD_LOCATION, SAVE_LOCATION = range(2)
+# Состояния конечного автомата
+LOCATION, ADD_LOCATION, ADD_LOCATION_CONFIRM = range(3)
 
-# Создаем функцию-обработчик команды /start
-def start(update: Update, context: CallbackContext) -> int:
-    user = update.effective_user
-    update.message.reply_html(
-        fr"Привет, {user.mention_html()}!"
-        "\n\n"
-        "Я бот, который может сохранять местоположение пользователя. "
-        "Чтобы отправить свое местоположение, нажмите кнопку 'Отправить местоположение' ниже."
-        "\n\n"
-        "Или используйте команду /add для добавления других мест."
+# Обработчики команды /start
+def start(update: Update, context: CallbackContext):
+    user = update.message.from_user
+    reply_markup = ReplyKeyboardMarkup(
+        [[KeyboardButton('Поделиться местоположением', request_location=True)]],
+        one_time_keyboard=True
+    )
+    update.message.reply_text(
+        f"Здравствуйте, господин {user.first_name}! Пожалуйста, поделитесь своим местоположением, нажав на кнопку ниже, "
+        f"или используйте команду /add_location, чтобы добавить геопозицию места.",
+        reply_markup=reply_markup
     )
 
-    # Создаем клавиатуру с кнопкой "Отправить местоположение"
-    keyboard = [[InlineKeyboardButton("Отправить местоположение", callback_data='send_location')]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text("Или нажмите кнопку ниже, чтобы отправить местоположение:", reply_markup=reply_markup)
+    return LOCATION
+
+# Обработка полученного местоположения
+def receive_location(update: Update, context: CallbackContext):
+    user = update.message.from_user
+    user_location = update.message.location
+
+    # Сохраняем местоположение пользователя в модели TgUser
+    with transaction.atomic():
+        tg_user, _ = TgUser.objects.get_or_create(username=user.username)
+        tg_user.latitude = str(user_location.latitude)
+        tg_user.longitude = str(user_location.longitude)
+        tg_user.save()
+
+    reply_markup = ReplyKeyboardMarkup(
+        [[KeyboardButton('Пропустить'), KeyboardButton('Добавить место')]],
+        one_time_keyboard=True
+    )
+    update.message.reply_text(
+        f"Спасибо, господин {user.first_name}! Ваше местоположение: "
+        f"Широта: {user_location.latitude}, Долгота: {user_location.longitude}",
+        reply_markup=reply_markup
+    )
 
     return ADD_LOCATION
 
-# Создаем функцию-обработчик для запроса местоположения через Callback
-def location_callback(update: Update, context: CallbackContext) -> int:
-    query = update.callback_query
-    user = query.message.chat
-    query.answer()
-
-    # Отправляем запрос на местоположение
-    query.message.reply_text("Пожалуйста, отправьте ваше текущее местоположение.")
-
-    return SAVE_LOCATION
-
-# Создаем функцию-обработчик для получения и сохранения местоположения пользователя
-def save_location(update: Update, context: CallbackContext) -> int:
+# Обработка команды "Добавить место"
+def add_location(update: Update, context: CallbackContext):
     user = update.message.from_user
-    latitude = update.message.location.latitude
-    longitude = update.message.location.longitude
-
-    # Сохраняем местоположение в модели TgUser
-    tg_user, created = TgUser.objects.get_or_create(username=user.username)
-    tg_user.latitude = str(latitude)
-    tg_user.longitude = str(longitude)
-    tg_user.save()
-
-    update.message.reply_text("Ваше местоположение успешно сохранено!")
-
-    return ConversationHandler.END
-
-# Создаем функцию-обработчик для добавления других мест
-def add_location(update: Update, context: CallbackContext) -> int:
-    user = update.effective_user
-    update.message.reply_text("Пожалуйста, отправьте местоположение, которое вы хотите сохранить в виде точки на карте.")
-    context.user_data["adding_location"] = True  # Устанавливаем флаг добавления места
-
-    return SAVE_LOCATION
-
-# Создаем функцию-обработчик для сохранения местоположения в модели Locations
-def save_custom_location(update: Update, context: CallbackContext) -> int:
-    user = update.effective_user
-    location = update.message.location
-
-    # Получаем название места от пользователя
-    location_name = context.args[0] if context.args else "Неизвестное место"
-
-    # Сохраняем местоположение в модели Locations
-    location_obj = Locations(
-        username=user.username,
-        name=location_name,
-        latitude=str(location.latitude),
-        longitude=str(location.longitude)
+    update.message.reply_text(
+        f"Господин {user.first_name}, пожалуйста, введите название места, которое вы хотите добавить."
     )
-    location_obj.save()
 
-    update.message.reply_text(f"Место '{location_name}' успешно сохранено в Locations!")
+    return ADD_LOCATION_CONFIRM
 
+# Обработка названия места
+def receive_location_name(update: Update, context: CallbackContext):
+    user = update.message.from_user
+    location_name = update.message.text
+
+    # Сохраняем название места в контексте пользователя
+    context.user_data['location_name'] = location_name
+
+    update.message.reply_text(
+        f"Спасибо, господин {user.first_name}! Теперь поделитесь геопозицией этого места, нажав на кнопку 'Поделиться местоположением'."
+    )
+
+    return ADD_LOCATION_CONFIRM
+
+# Обработка геопозиции места и названия
+def confirm_add_location(update: Update, context: CallbackContext):
+    user = update.message.from_user
+    added_location = update.message.location
+
+    # Получаем название места из контекста пользователя
+    location_name = context.user_data.get('location_name')
+
+    if not location_name:
+        update.message.reply_text("Название места не найдено. Пожалуйста, начните процесс добавления места снова.")
+        return ConversationHandler.END
+
+    # Сохраняем местоположение места в модели Locations
+    with transaction.atomic():
+        tg_user, _ = TgUser.objects.get_or_create(username=user.username)
+        Locations.objects.create(
+            username=user.first_name,
+            name=location_name,
+            latitude=str(added_location.latitude),
+            longitude=str(added_location.longitude)
+        )
+
+    update.message.reply_text(
+        f"Спасибо, господин {user.first_name}! Вы успешно добавили место '{location_name}' с геопозицией: "
+        f"Широта: {added_location.latitude}, Долгота: {added_location.longitude}"
+    )
+
+    # Очищаем данные пользователя из контекста
+    context.user_data.clear()
+
+    # Возвращаем состояние ADD_LOCATION, чтобы пользователь мог добавить еще мест
+    return ADD_LOCATION
+
+# Функция для завершения диалога
+def cancel(update: Update, context: CallbackContext):
+    update.message.reply_text("Диалог завершен.")
     return ConversationHandler.END
 
-# Основная функция для запуска бота
-def main():
-    # Инициализируем бота
-    updater = Updater("YOUR_BOT_TOKEN", use_context=True)
+# Функция для поиска ближайшего местоположения
+def find_nearest_location(username):
+    try:
+        # Получите местоположение пользователя из модели TgUser
+        user = TgUser.objects.get(username=username)
+        user_location = (float(user.latitude), float(user.longitude))
 
-    # Получаем объект диспетчера для регистрации обработчиков
+        # Получите список всех местоположений из модели Locations
+        all_locations = Locations.objects.all()
+
+        # Инициализируйте переменные для хранения ближайшего местоположения и минимального расстояния
+        nearest_location = None
+        min_distance = float('inf')
+
+        # Пройдите по всем местоположениям и найдите ближайшее
+        for location in all_locations:
+            location_coords = (float(location.latitude), float(location.longitude))
+            distance = geodesic(user_location, location_coords).kilometers
+
+            # Если найдено меньшее расстояние, обновите ближайшее местоположение и минимальное расстояние
+            if distance < min_distance:
+                min_distance = distance
+                nearest_location = location
+
+        return nearest_location, min_distance
+    except TgUser.DoesNotExist:
+        return None, None
+
+# Добавьте обработчик команды для отправки ближайшей геопозиции
+def send_nearest_location(update: Update, context: CallbackContext):
+    user = update.message.from_user
+    username = user.username
+
+    # Вызовите функцию find_nearest_location для поиска ближайшего местоположения
+    nearest_location, min_distance = find_nearest_location(username)
+
+    if nearest_location:
+        # Отправляем ближайшее местоположение пользователю
+        update.message.reply_location(
+            latitude=float(nearest_location.latitude),
+            longitude=float(nearest_location.longitude),
+        )
+    else:
+        update.message.reply_text("Ваше местоположение не найдено или вы не добавили его.")
+
+def main():
+    updater = Updater(token='6505801822:AAHrauG6e9GCXjhslHFsR2okABRvDPJUR7U', use_context=True)  # Замените на ваш токен бота
     dp = updater.dispatcher
 
-    # Регистрируем обработчики команд и сообщений
+    # Создаем обработчики
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
-            ADD_LOCATION: [CallbackQueryHandler(location_callback, pattern='send_location')],
-            SAVE_LOCATION: [MessageHandler(Filters.location & ~Filters.command, save_location)],
+            LOCATION: [MessageHandler(Filters.location, receive_location)],
+            ADD_LOCATION: [
+                MessageHandler(Filters.text & Filters.regex('^Добавить место$'), add_location),
+                MessageHandler(Filters.text & ~Filters.regex('^Добавить место$'), receive_location_name),
+            ],
+            ADD_LOCATION_CONFIRM: [MessageHandler(Filters.location, confirm_add_location)]
         },
-        fallbacks=[]
+        fallbacks=[CommandHandler('cancel', cancel)]
     )
+
     dp.add_handler(conv_handler)
-    dp.add_handler(CommandHandler("add", add_location))
-    dp.add_handler(CommandHandler("save", save_custom_location, pass_args=True))
 
-    # Запускаем бота
+    # Добавьте обработчик команды /send_nearest_location
+    dp.add_handler(CommandHandler('send_nearest_location', send_nearest_location))
+
     updater.start_polling()
-
-    # Запускаем бота и ожидаем завершения
     updater.idle()
 
 if __name__ == '__main__':
