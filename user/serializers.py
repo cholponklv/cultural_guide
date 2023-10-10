@@ -64,6 +64,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class FavouritesSerializer(serializers.ModelSerializer):
+  
+    
+
+    class Meta:
+        model = Favourites
+        fields = '__all__' 
+
+class FavouritesListSerializer(serializers.ModelSerializer):
     events = EventsSerializer()  
     
 

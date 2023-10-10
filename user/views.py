@@ -76,23 +76,13 @@ class FavouritesCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         user = self.request.user
-        type = self.request.data.get('type')
 
-        if type == 'event':
-            event_id = self.request.data.get('events')
-            event = get_object_or_404(Events, pk=event_id)
-            serializer.save(user=user, events=event,type=self.request.data.get('type'))
-        elif type == 'tour':
-            tour_id = self.request.data.get('tours')
-            tour = get_object_or_404(Tours, pk=tour_id)
-            serializer.save(user=user, tours=tour,type=self.request.data.get('type'))
-        elif type == 'meeting':
-            meeting_id = self.request.data.get('meetings')
-            meeting = get_object_or_404(Meeting, pk=meeting_id)
-            serializer.save(user=user, meetings=meeting,type=self.request.data.get('type'))
+        event_id = self.kwargs['event_id']  
+        event = get_object_or_404(Events, pk=event_id)
+        serializer.save(user=user, events=event)
 
 class FavouritesListAPIView(generics.ListAPIView):
-    serializer_class = serializers.FavouritesSerializer
+    serializer_class = serializers.FavouritesListSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):

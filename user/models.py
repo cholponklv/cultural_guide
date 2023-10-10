@@ -88,9 +88,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class Favourites(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,default=None)
-    events = models.ForeignKey('events.Events', on_delete=models.CASCADE,blank=True,null=True,default=None)
-    class Meta:
-        unique_together = ('user', 'events')
+    events = models.ForeignKey('events.Events', on_delete=models.CASCADE,default=None,blank=True,null=True)
+
         
 
 

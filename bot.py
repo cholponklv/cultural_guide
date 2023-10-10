@@ -7,7 +7,7 @@ import sys
 sys.path.append('/home/cholponklv/Desktop/xacaton/guide/')
 
 # Импортируйте настройки Django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "guide.settings")  # Замените на имя вашего проекта Django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "guide.settings")
 
 import django
 django.setup()
@@ -20,7 +20,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 
 # Состояния конечного автомата
-LOCATION, ADD_LOCATION, ADD_LOCATION_CONFIRM = range(3)
+LOCATION, ADD_LOCATION, ADD_LOCATION_CONFIRM, ADD_LOCATION_CONFIRM_NAME = range(4)
 
 # Обработчики команды /start
 def start(update: Update, context: CallbackContext):
@@ -65,40 +65,34 @@ def receive_location(update: Update, context: CallbackContext):
 def add_location(update: Update, context: CallbackContext):
     user = update.message.from_user
     update.message.reply_text(
-        f"Господин {user.first_name}, пожалуйста, введите название места, которое вы хотите добавить."
+        f"Господин {user.first_name}, чтобы добавить место, поделитесь геопозицией этого места, нажав на кнопку 'Поделиться местоположением'."
     )
 
     return ADD_LOCATION_CONFIRM
 
-# Обработка названия места
-def receive_location_name(update: Update, context: CallbackContext):
-    user = update.message.from_user
-    location_name = update.message.text
-
-    # Сохраняем название места в контексте пользователя
-    context.user_data['location_name'] = location_name
-
-    update.message.reply_text(
-        f"Спасибо, господин {user.first_name}! Теперь поделитесь геопозицией этого места, нажав на кнопку 'Поделиться местоположением'."
-    )
-
-    return ADD_LOCATION_CONFIRM
-
-# Обработка геопозиции места и названия
+# Обработка геопозиции места и запрос названия
 def confirm_add_location(update: Update, context: CallbackContext):
     user = update.message.from_user
     added_location = update.message.location
 
-    # Получаем название места из контекста пользователя
-    location_name = context.user_data.get('location_name')
+    # Сохраняем местоположение места в контексте пользователя
+    context.user_data['temp_location'] = added_location
 
-    if not location_name:
-        update.message.reply_text("Название места не найдено. Пожалуйста, начните процесс добавления места снова.")
-        return ConversationHandler.END
+    # Запрашиваем название места
+    update.message.reply_text(f"Пожалуйста, введите название места:")
 
-    # Сохраняем местоположение места в модели Locations
+    return ADD_LOCATION_CONFIRM_NAME
+
+# Обработка введенного названия места
+def receive_location_name(update: Update, context: CallbackContext):
+    user = update.message.from_user
+    location_name = update.message.text
+
+    # Получаем временное местоположение из контекста пользователя
+    added_location = context.user_data['temp_location']
+
+    # Сохраняем местоположение места в модели Locations вместе с названием
     with transaction.atomic():
-        tg_user, _ = TgUser.objects.get_or_create(username=user.username)
         Locations.objects.create(
             username=user.first_name,
             name=location_name,
@@ -107,12 +101,9 @@ def confirm_add_location(update: Update, context: CallbackContext):
         )
 
     update.message.reply_text(
-        f"Спасибо, господин {user.first_name}! Вы успешно добавили место '{location_name}' с геопозицией: "
+        f"Спасибо, господин {user.first_name}! Вы поделились геопозицией места '{location_name}': "
         f"Широта: {added_location.latitude}, Долгота: {added_location.longitude}"
     )
-
-    # Очищаем данные пользователя из контекста
-    context.user_data.clear()
 
     # Возвращаем состояние ADD_LOCATION, чтобы пользователь мог добавить еще мест
     return ADD_LOCATION
@@ -150,7 +141,7 @@ def find_nearest_location(username):
     except TgUser.DoesNotExist:
         return None, None
 
-# Добавьте обработчик команды для отправки ближайшей геопозиции
+# Обработчик команды для отправки ближайшего местоположения с названием, геопозицией и расстоянием
 def send_nearest_location(update: Update, context: CallbackContext):
     user = update.message.from_user
     username = user.username
@@ -159,14 +150,26 @@ def send_nearest_location(update: Update, context: CallbackContext):
     nearest_location, min_distance = find_nearest_location(username)
 
     if nearest_location:
-        # Отправляем ближайшее местоположение пользователю
+        # Получите название места, геопозицию и расстояние
+        location_name = nearest_location.name
+        location_latitude = float(nearest_location.latitude)
+        location_longitude = float(nearest_location.longitude)
+        distance = min_distance  # Расстояние уже вычислено в функции find_nearest_location
+
+        # Отправляем ближайшее местоположение пользователю с названием, геопозицией и расстоянием
+        update.message.reply_text(
+            f"Ближайшее место: {location_name}\n"
+            f"Геопозиция: Широта: {location_latitude}, Долгота: {location_longitude}\n"
+            f"Расстояние: {distance:.2f} км"
+        )
         update.message.reply_location(
-            latitude=float(nearest_location.latitude),
-            longitude=float(nearest_location.longitude),
+            latitude=location_latitude,
+            longitude=location_longitude,
         )
     else:
         update.message.reply_text("Ваше местоположение не найдено или вы не добавили его.")
 
+# Внесите изменения в функцию main() для добавления обработчика команды /send_nearest_location
 def main():
     updater = Updater(token='6505801822:AAHrauG6e9GCXjhslHFsR2okABRvDPJUR7U', use_context=True)  # Замените на ваш токен бота
     dp = updater.dispatcher
@@ -176,11 +179,9 @@ def main():
         entry_points=[CommandHandler('start', start)],
         states={
             LOCATION: [MessageHandler(Filters.location, receive_location)],
-            ADD_LOCATION: [
-                MessageHandler(Filters.text & Filters.regex('^Добавить место$'), add_location),
-                MessageHandler(Filters.text & ~Filters.regex('^Добавить место$'), receive_location_name),
-            ],
-            ADD_LOCATION_CONFIRM: [MessageHandler(Filters.location, confirm_add_location)]
+            ADD_LOCATION: [MessageHandler(Filters.text & Filters.regex('^Добавить место$'), add_location)],
+            ADD_LOCATION_CONFIRM: [MessageHandler(Filters.location, confirm_add_location)],
+            ADD_LOCATION_CONFIRM_NAME: [MessageHandler(Filters.text, receive_location_name)]
         },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
