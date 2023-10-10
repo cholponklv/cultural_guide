@@ -23,14 +23,15 @@ class Tours(models.Model):
     max_members = models.IntegerField()
     route = models.TextField()
     services_included = models.TextField(blank=True, null=True)
-    organizer = models.ForeignKey(User,on_delete=models.CASCADE,default=None,related_name='organized_tours')
+    organizer = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=None, related_name='organized_tours')
     likes_count = models.IntegerField(default=0)
 
 
 class ToursMembers(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     tours = models.ForeignKey(Tours, on_delete=models.CASCADE)
-    text = models.TextField(blank=True,null=True)
+    text = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f'{self.user.username} на {self.tours.title}'
@@ -41,13 +42,14 @@ class ToursMembers(models.Model):
 
 class CategoryTours(models.Model):
     title = models.CharField(max_length=100)
+
     def __str__(self):
         return str(self.title)
 
 
 class ReviewsTours(models.Model):
     user = models.ForeignKey('user.User', on_delete=models.CASCADE)
-    tours = models.ForeignKey(Tours,on_delete=models.CASCADE)
+    tours = models.ForeignKey(Tours, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     likes_count = models.IntegerField(default=0)
@@ -57,8 +59,8 @@ class ReviewsTours(models.Model):
 
 
 class LikesTours(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE,default=None)
-    tours = models.ForeignKey(Tours,on_delete=models.CASCADE,default=None)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
+    tours = models.ForeignKey(Tours, on_delete=models.CASCADE, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -67,7 +69,7 @@ class LikesTours(models.Model):
 
 class LikesReviews(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
-    reviews = models.ForeignKey(ReviewsTours,on_delete=models.CASCADE)
+    reviews = models.ForeignKey(ReviewsTours, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

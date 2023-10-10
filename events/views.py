@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework import viewsets,permissions,filters
+from rest_framework import viewsets, permissions, filters
 from django_filters import rest_framework as dj_filters
 from rest_framework.response import Response
 from events import models
@@ -9,25 +9,30 @@ from rest_framework import generics
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 # Create your views here.
+
+
 class EventsViewSet(viewsets.ModelViewSet):
     queryset = models.Events.objects.all()
     serializer_class = serializers.EventsCreateSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    filter_backends = (dj_filters.DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter)
+    filter_backends = (dj_filters.DjangoFilterBackend,
+                       filters.OrderingFilter, filters.SearchFilter)
     filterset_class = filter.EventsFilters
     ordering_fields = '__all__'
-    search_fields = ('title','description', 'geolocation_name','date','time_start',"time_end")
+    search_fields = ('title', 'description', 'geolocation_name',
+                     'date', 'time_start', "time_end")
 
     def perform_create(self, serializer):
         serializer.save(organizer=self.request.user)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance.views += 1  
+        instance.views += 1
         instance.save()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-    
+
+
 class CategoryEventsViewSet(viewsets.ModelViewSet):
     queryset = models.CategoryEvents.objects.all()
     serializer_class = serializers.CategoryEventsSerializer
@@ -41,7 +46,7 @@ class CommentsEventsListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         event_id = self.kwargs['event_id']
-        
+
         event = get_object_or_404(models.Events, pk=event_id)
         print(event)
         serializer.save(user=self.request.user, events=event)
@@ -49,12 +54,11 @@ class CommentsEventsListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         event_id = self.kwargs['event_id']
         event = get_object_or_404(models.Events, pk=event_id)
-        
-    
+
         queryset = models.CommentsEvents.objects.filter(events=event)
-        
+
         return queryset
-    
+
 
 class LikeEventsListCreateView(generics.ListCreateAPIView):
     queryset = models.LikesEvents.objects.all()
@@ -66,8 +70,9 @@ class LikeEventsListCreateView(generics.ListCreateAPIView):
         events = get_object_or_404(models.Events, pk=event_id)
         user = self.request.user
 
-        existing_like = models.LikesEvents.objects.filter(events=events, user=user).first()
-        
+        existing_like = models.LikesEvents.objects.filter(
+            events=events, user=user).first()
+
         if existing_like:
             existing_like.delete()
             events.likes_count -= 1
@@ -89,8 +94,9 @@ class LikeCommentsListCreateView(generics.ListCreateAPIView):
         comments = get_object_or_404(models.CommentsEvents, pk=comment_id)
         user = self.request.user
 
-        existing_like = models.LikesComments.objects.filter(comments=comments, user=user).first()
-        
+        existing_like = models.LikesComments.objects.filter(
+            comments=comments, user=user).first()
+
         if existing_like:
             existing_like.delete()
             comments.likes_count -= 1

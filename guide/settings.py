@@ -41,7 +41,7 @@ DJANGO_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
-THIRD_PARTY_APPS=[
+THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'drf_spectacular',
@@ -51,7 +51,7 @@ THIRD_PARTY_APPS=[
     'rest_framework.authtoken',
 ]
 
-LOCAL_APPS=[
+LOCAL_APPS = [
     'events',
     'eventsdate',
     'tours',
@@ -181,4 +181,4 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-STATIC_ROOT =  os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
